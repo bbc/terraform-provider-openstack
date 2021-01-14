@@ -10,3 +10,5 @@ require (
 	github.com/stretchr/testify v1.4.0
 	gopkg.in/yaml.v2 v2.3.0
 )
+
+replace github.com/gophercloud/gophercloud => github.com/bbc/gophercloud v0.15.1-0.20210202145613-3619d13fe1ef

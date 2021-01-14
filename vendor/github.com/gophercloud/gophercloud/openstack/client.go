@@ -475,7 +475,9 @@ func NewMessagingV2(client *gophercloud.ProviderClient, clientID string, eo goph
 
 // NewContainerV1 creates a ServiceClient that may be used with v1 container package
 func NewContainerV1(client *gophercloud.ProviderClient, eo gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error) {
-	return initClientOpts(client, eo, "container")
+	sc, err := initClientOpts(client, eo, "container")
+	sc.ResourceBase = sc.Endpoint + "v1/"
+	return sc, err
 }
 
 // NewKeyManagerV1 creates a ServiceClient that may be used with the v1 key
