@@ -312,6 +312,7 @@ func Provider() terraform.ResourceProvider {
 			"openstack_compute_floatingip_v2":                    resourceComputeFloatingIPV2(),
 			"openstack_compute_floatingip_associate_v2":          resourceComputeFloatingIPAssociateV2(),
 			"openstack_compute_volume_attach_v2":                 resourceComputeVolumeAttachV2(),
+			"openstack_container_container_v1":                   resourceContainerContainerV1(),
 			"openstack_containerinfra_clustertemplate_v1":        resourceContainerInfraClusterTemplateV1(),
 			"openstack_containerinfra_cluster_v1":                resourceContainerInfraClusterV1(),
 			"openstack_db_instance_v1":                           resourceDatabaseInstanceV1(),
