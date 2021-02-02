@@ -458,12 +458,12 @@ func ContainerV1StatusRefreshFunc(client *gophercloud.ServiceClient, instanceID 
 
 func resourceContainerContainerV1Read(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	containerInfraClient, err := config.ContainerV1Client(GetRegion(d, config))
+	containerClient, err := config.ContainerV1Client(GetRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("Error creating OpenStack container client: %s", err)
 	}
 
-	c, err := containers.Get(containerInfraClient, d.Id()).Extract()
+	c, err := containers.Get(containerClient, d.Id()).Extract()
 	if err != nil {
 		return fmt.Errorf("Error retrieving openstack_container_container_v1: %s", err)
 	}
@@ -522,7 +522,9 @@ func resourceContainerContainerV1Delete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error creating OpenStack container client: %s", err)
 	}
 
-	if err := containers.Delete(containerClient, d.Id()).ExtractErr(); err != nil {
+	containerClient.Microversion = "1.12"
+
+	if err := containers.StopAndDelete(containerClient, d.Id()).ExtractErr(); err != nil {
 		return CheckDeleted(d, err, "Error deleting openstack_container_container_v1")
 	}
 
