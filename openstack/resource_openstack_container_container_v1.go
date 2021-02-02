@@ -321,13 +321,6 @@ func resourceContainerContainerV1Create(d *schema.ResourceData, meta interface{}
 
 	containerInfraClient.Microversion = "1.31"
 
-	// Get boolean parameters that will be passed by reference.
-	interactive := d.Get("interactive").(bool)
-	tty := d.Get("tty").(bool)
-	autoRemove := d.Get("auto_remove").(bool)
-	autoHeal := d.Get("auto_heal").(bool)
-	//privileged := d.Get("privileged").(bool)
-
 	createOpts := containers.CreateOptsV131{
 		CreateOpts: containers.CreateOpts{
 			Name:             d.Get("name").(string),
@@ -339,25 +332,37 @@ func resourceContainerContainerV1Create(d *schema.ResourceData, meta interface{}
 			Labels:           unfoldMapToString(d.Get("labels").(map[string]interface{})),
 			Environment:      unfoldMapToString(d.Get("environment").(map[string]interface{})),
 			RestartPolicy:    unfoldMapToString(d.Get("restart_policy").(map[string]interface{})),
-			Interactive:      &interactive,
-			TTY:              &tty,
 			ImageDriver:      d.Get("image_driver").(string),
 			SecurityGroups:   unfoldListOfStrings(d.Get("security_groups").([]interface{})),
 			Nets:             unfoldListOfMapToString(d.Get("nets").([]interface{})),
 			Runtime:          d.Get("runtime").(string),
 			Hostname:         d.Get("hostname").(string),
-			AutoRemove:       &autoRemove,
-			AutoHeal:         &autoHeal,
 			AvailabilityZone: d.Get("availability_zone").(string),
 			Hints:            unfoldMapToString(d.Get("hints").(map[string]interface{})),
 			Mounts:           unfoldListOfMapToString(d.Get("mounts").([]interface{})),
-			//Privileged:       &privileged,
-			Healthcheck:  unfoldMapToString(d.Get("healthcheck").(map[string]interface{})),
-			ExposedPorts: unfoldMapToMapToString(d.Get("exposed_ports").(map[string]interface{})),
-			Host:         d.Get("host").(string),
-			Entrypoint:   unfoldListOfStrings(d.Get("entrypoint").([]interface{})),
+			Healthcheck:      unfoldMapToString(d.Get("healthcheck").(map[string]interface{})),
+			ExposedPorts:     unfoldMapToMapToString(d.Get("exposed_ports").(map[string]interface{})),
+			Host:             d.Get("host").(string),
+			Entrypoint:       unfoldListOfStrings(d.Get("entrypoint").([]interface{})),
 		},
 		Registry: d.Get("registry").(string),
+	}
+
+	// Get boolean parameters that will be passed by reference.
+	if interactive, ok := d.Get("interactive").(bool); ok && interactive {
+		createOpts.Interactive = &interactive
+	}
+	if tty, ok := d.Get("tty").(bool); ok && tty {
+		createOpts.TTY = &tty
+	}
+	if autoRemove, ok := d.Get("auto_remove").(bool); ok && autoRemove {
+		createOpts.AutoRemove = &autoRemove
+	}
+	if autoHeal, ok := d.Get("auto_heal").(bool); ok && autoHeal {
+		createOpts.AutoHeal = &autoHeal
+	}
+	if privileged, ok := d.Get("privileged").(bool); ok && privileged {
+		createOpts.Privileged = &privileged
 	}
 
 	log.Printf("[DEBUG] openstack_container_container_v1 create options: %#v", createOpts)
