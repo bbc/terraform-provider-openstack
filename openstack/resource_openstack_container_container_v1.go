@@ -429,6 +429,14 @@ func resourceContainerContainerV1Create(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Created openstack_container_container_v1 %s: %#v", c.UUID, c)
 
+	log.Printf("[DEBUG] Starting container (%s)", c.UUID)
+
+	if err := containers.Start(containerClient, d.Id()).ExtractErr(); err != nil {
+		return fmt.Errorf(
+			"Error starting container (%s): %s",
+			c.UUID, err)
+	}
+
 	return resourceContainerContainerV1Read(d, meta)
 }
 
