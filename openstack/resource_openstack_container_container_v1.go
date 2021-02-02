@@ -8,6 +8,7 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/container/v1/containers"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -30,8 +31,39 @@ func resourceContainerContainerV1() *schema.Resource {
 				Type: schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeList,
-					Elem: &schema.Schema{
-						Type: schema.TypeMap,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"preserve_on_delete": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+								Computed: true,
+							},
+							"addr": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								Computed: true,
+							},
+							"port": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								Computed: true,
+							},
+							"version": {
+								Type:     schema.TypeFloat,
+								Optional: true,
+								ForceNew: true,
+								Computed: true,
+							},
+							"subnet_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								Computed: true,
+							},
+						},
 					},
 				},
 				Computed: true,
@@ -314,12 +346,12 @@ func (c *Config) ContainerV1Client(region string) (*gophercloud.ServiceClient, e
 
 func resourceContainerContainerV1Create(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	containerInfraClient, err := config.ContainerV1Client(GetRegion(d, config))
+	containerClient, err := config.ContainerV1Client(GetRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("Error creating OpenStack container client: %s", err)
 	}
 
-	containerInfraClient.Microversion = "1.31"
+	containerClient.Microversion = "1.31"
 
 	createOpts := containers.CreateOptsV131{
 		CreateOpts: containers.CreateOpts{
@@ -367,15 +399,53 @@ func resourceContainerContainerV1Create(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] openstack_container_container_v1 create options: %#v", createOpts)
 
-	c, err := containers.Create(containerInfraClient, createOpts).Extract()
+	c, err := containers.Create(containerClient, createOpts).Extract()
 	if err != nil {
 		return fmt.Errorf("Error creating openstack_container_container_v1: %s", err)
 	}
 
 	d.SetId(c.UUID)
 
+	// Wait for the instance to become created
+	log.Printf(
+		"[DEBUG] Waiting for container (%s) to become created",
+		c.UUID)
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"Creating"},
+		Target:     []string{"Created"},
+		Refresh:    ContainerV1StatusRefreshFunc(containerClient, c.UUID),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf(
+			"Error waiting for instance (%s) to become ready: %s",
+			c.UUID, err)
+	}
+
 	log.Printf("[DEBUG] Created openstack_container_container_v1 %s: %#v", c.UUID, c)
+
 	return resourceContainerContainerV1Read(d, meta)
+}
+
+// ContainerV1StatusRefreshFunc returns a resource.StateRefreshFunc that is used to watch
+// an OpenStack instance.
+func ContainerV1StatusRefreshFunc(client *gophercloud.ServiceClient, instanceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		c, err := containers.Get(client, instanceID).Extract()
+		if err != nil {
+			if _, ok := err.(gophercloud.ErrDefault404); ok {
+				return c, "Deleted", nil
+			}
+			return nil, "", err
+		}
+
+		return c, c.Status, nil
+	}
 }
 
 func resourceContainerContainerV1Read(d *schema.ResourceData, meta interface{}) error {
@@ -393,23 +463,18 @@ func resourceContainerContainerV1Read(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Retrieved openstack_container_container_v1 %s: %#v", d.Id(), c)
 
 	// Fill out the addresses from the returned data
-	addresses := map[string][]map[string]interface{}{}
 	for key, net := range c.Addresses {
-		addrs := []map[string]interface{}{}
-		for _, addr := range net {
-			addrs = append(addrs, map[string]interface{}{
-				"preserve_on_delete": addr.PreserveOnDelete,
-				"addr":               addr.Addr,
-				"port":               addr.Port,
-				"version":            addr.Version,
-				"subnet_id":          addr.SubnetID,
-			})
+		for i, addr := range net {
+			path := fmt.Sprintf("addresses.%s.%d", key, i)
+			d.Set(path+".preserve_on_delete", addr.PreserveOnDelete)
+			d.Set(path+".addr", addr.Addr)
+			d.Set(path+".port", addr.Port)
+			d.Set(path+".version", addr.Version)
+			d.Set(path+".subnet_id", addr.SubnetID)
 		}
-		addresses[key] = addrs
 	}
 
 	d.Set("links", c.Links)
-	d.Set("addresses", addresses)
 	d.Set("name", c.Name)
 	d.Set("image", c.Image)
 	d.Set("labels", c.Labels)
