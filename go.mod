@@ -11,4 +11,4 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 )
 
-replace github.com/gophercloud/gophercloud => github.com/bbc/gophercloud v0.15.1-0.20210202145613-3619d13fe1ef
+replace github.com/gophercloud/gophercloud => github.com/bbc/gophercloud v0.15.1-0.20210217110349-1fe61c1403ec

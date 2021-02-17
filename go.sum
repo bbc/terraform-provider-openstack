@@ -66,6 +66,8 @@ github.com/bbc/gophercloud v0.15.1-0.20210202144749-014e724c9586 h1:MAW9p0UnkMry
 github.com/bbc/gophercloud v0.15.1-0.20210202144749-014e724c9586/go.mod h1:wRtmUelyIIv3CSSDI47aUwbs075O6i+LY+pXsKCBsb4=
 github.com/bbc/gophercloud v0.15.1-0.20210202145613-3619d13fe1ef h1:aZvnf7EB/2uOOfgybfeQYujJ7IKU6n641qb5qz8N/Nc=
 github.com/bbc/gophercloud v0.15.1-0.20210202145613-3619d13fe1ef/go.mod h1:wRtmUelyIIv3CSSDI47aUwbs075O6i+LY+pXsKCBsb4=
+github.com/bbc/gophercloud v0.15.1-0.20210217110349-1fe61c1403ec h1:Dlk/Bz04hynXoe95MdOS1xa0Oc6YPael119y77QIyCk=
+github.com/bbc/gophercloud v0.15.1-0.20210217110349-1fe61c1403ec/go.mod h1:wRtmUelyIIv3CSSDI47aUwbs075O6i+LY+pXsKCBsb4=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d h1:xDfNPAt8lFiC1UJrqV3uuy861HCTo708pDMbjHHdCas=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d/go.mod h1:6QX/PXZ00z/TKoufEY6K/a0k6AhaJrQKdFe6OfVXsa4=
 github.com/bgentry/speakeasy v0.1.0 h1:ByYyxL9InA1OWqxJqqp2A5pYHUrCiAL6K3J+LKSsQkY=
